@@ -1,4 +1,5 @@
 #!/usr/bin/env escript
+-mode(compile).
 
 %% Vectors are generated independently by Python zoneinfo and IANA's zic.
 main([Ebin, VectorsPath]) ->

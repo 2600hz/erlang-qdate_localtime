@@ -8,6 +8,35 @@ but have diverged slightly over the years.  The qdate tests will not pass if the
 original `erlang_localtime dependency` is used due to some subtle differences
 to attempt to make qdate a little bit smarter.
 
+#### Canadian rules effective in 2026
+
+The date being converted selects the timezone rules. For Vancouver, Edmonton,
+Inuvik, Winnipeg and their retained aliases, conversions before the 2026 change
+keep the existing seasonal rules. Conversions after the change use permanent
+UTC-7, UTC-6, UTC-6 and UTC-5 respectively. This selection applies to UTC/local
+conversion, offset/name lookup and direct `localtime_dst:check/2` calls.
+
+The corrections follow [IANA tzdata 2026e](https://www.iana.org/time-zones/releases/2026e),
+including its modeled abbreviation/DST transition at 02:00 local daylight time
+on November 1, 2026. At that instant the UTC offset stays the same; the final
+daylight names PDT/MDT/CDT become MST/CST/EST. The former 01:00 overlap is
+cancelled. Earlier timestamps and unrelated zones retain the legacy snapshot;
+this is a targeted correction, not a complete upgrade of that snapshot.
+
+Run the existing and Canadian regression tests with the installed Erlang tools:
+
+```sh
+bash test/run.sh
+```
+
+An independent comparison compiles the official IANA archive with `zic` and
+uses Python's `zoneinfo` to generate conversion, name, DST and offset vectors.
+It requires Python 3.12+, `zic` and `escript`, and verifies the archive's SHA256:
+
+```sh
+python3 test/check_iana.py /path/to/tzdata2026e.tar.gz
+```
+
 #### Public exports
 
 * `utc_to_local(DateTime, Timezone)` - converts UTC time to local according to specified Timezone

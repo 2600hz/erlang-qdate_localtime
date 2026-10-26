@@ -5,8 +5,6 @@
 
 -author("Dmitry Melnikov <dmitryme@gmail.com>").
 
--include("tz_database.hrl").
-
 -export(
   [
      utc_to_local/2
@@ -29,7 +27,7 @@
 %  DstLocalDateTime = DateTime()
 %  ErrDescr = atom(), unknown_tz
 utc_to_local(UtcDateTime, Timezone) ->
-   case lists:keyfind(get_timezone(Timezone), 1, ?tz_database) of
+   case localtime_tzdata:lookup(get_timezone(Timezone), UtcDateTime, utc) of
       false ->
          {error, unknown_tz};
       {_Tz, _, _, Shift, _DstShift, undef, _DstStartTime, undef, _DstEndTime} ->
@@ -53,7 +51,7 @@ utc_to_local(UtcDateTime, Timezone) ->
 %  DstUtcDateTime = DateTime()
 %  ErrDescr = atom(), unknown_tz
 local_to_utc(LocalDateTime, Timezone) ->
-   case lists:keyfind(get_timezone(Timezone), 1, ?tz_database) of
+   case localtime_tzdata:lookup(get_timezone(Timezone), LocalDateTime, local) of
       false ->
          {error, unknown_tz};
       {_Tz, _, _, Shift, _DstShift, undef, _DstStartTime, undef, _DstEndTime} ->
@@ -126,7 +124,7 @@ local_to_local_dst(LocalDateTime, TimezoneFrom, TimezoneTo) ->
 tz_name(_UtcDateTime, "UTC") ->
    {"UTC", "UTC"};
 tz_name(LocalDateTime, Timezone) ->
-   case lists:keyfind(get_timezone(Timezone), 1, ?tz_database) of
+   case localtime_tzdata:lookup(get_timezone(Timezone), LocalDateTime, local) of
       false ->
          {error, unknown_tz};
       {_Tz, StdName, undef, _Shift, _DstShift, undef, _DstStartTime, undef, _DstEndTime} ->
@@ -156,7 +154,7 @@ tz_name(LocalDateTime, Timezone) ->
 tz_shift(_UtcDateTime, "UTC") ->
    0;
 tz_shift(LocalDateTime, Timezone) ->
-   case lists:keyfind(get_timezone(Timezone), 1, ?tz_database) of
+   case localtime_tzdata:lookup(get_timezone(Timezone), LocalDateTime, local) of
       false ->
          {error, unknown_tz};
       {_Tz, _StdName, undef, Shift, _DstShift, undef, _DstStartTime, undef, _DstEndTime} ->

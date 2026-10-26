@@ -10,6 +10,8 @@ to attempt to make qdate a little bit smarter.
 
 #### Canadian rules effective in 2026
 
+Version 1.2.3 includes upstream 1.2.2 and the dated Canadian corrections below.
+
 The date being converted selects the timezone rules. For Vancouver, Edmonton,
 Inuvik, Winnipeg and their retained aliases, conversions before the 2026 change
 keep the existing seasonal rules. Conversions after the change use permanent

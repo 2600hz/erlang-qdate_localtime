@@ -1,0 +1,34 @@
+name: Timezone regression
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: OTP ${{ matrix.otp }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        otp: ['26.2.5', '27.3.4.15', '28.5.0.8']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with:
+          otp-version: ${{ matrix.otp }}
+      - name: Compile and run EUnit
+        run: bash test/run.sh
+      - name: Compare with pinned IANA 2026e
+        run: |
+          curl --fail --location --retry 3 \
+            https://data.iana.org/time-zones/releases/tzdata2026e.tar.gz \
+            --output "$RUNNER_TEMP/tzdata2026e.tar.gz"
+          python3 test/check_iana.py "$RUNNER_TEMP/tzdata2026e.tar.gz"

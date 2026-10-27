@@ -5,27 +5,33 @@
 
 -author("Dmitry Melnikov <dmitryme@gmail.com>").
 
--include("tz_database.hrl").
-
 -export(
    [
       check/2
    ]).
 
--compile([export_all]).
+%-compile([export_all]).
 
 
 % check(DateTime, TimeZone) -> is_in_dst | is_not_in_dst | ambiguous_time | time_not_exists
 %  DateTime = DateTime()
 %  TimeZone = tuple()
-check(DateTime, Timezone) when is_list(Timezone) ->
-    case lists:keyfind(localtime:get_timezone(Timezone), 1, ?tz_database) of
+check(DateTime, Timezone) when is_list(Timezone); is_binary(Timezone) ->
+    case localtime_tzdata:lookup(localtime:get_timezone(Timezone), DateTime, local) of
         false ->
             {error, unknown_tz};
         TZ -> 
             check(DateTime, TZ)
     end;
-check({Date = {Year, _, _},Time}, {_, _, _, _Shift, DstShift, DstStartRule, DstStartTime, DstEndRule, DstEndTime}) ->
+check(DateTime, {Timezone, _, _, _, _, _, _, _, _}=Rule) ->
+   case localtime_tzdata:dst(DateTime, Timezone) of
+      legacy -> check_rule(DateTime, Rule);
+      Result -> Result
+   end.
+
+check_rule(_DateTime, {_, _, undef, _, _, undef, _, undef, _}) ->
+   is_not_in_dst;
+check_rule({Date = {Year, _, _},Time}, {_, _, _, _Shift, DstShift, DstStartRule, DstStartTime, DstEndRule, DstEndTime}) ->
    DstStartDay = get_dst_day_of_year(DstStartRule, Year),
    DstEndDay = get_dst_day_of_year(DstEndRule, Year),
    CurrDay = get_day_of_year(Date),
